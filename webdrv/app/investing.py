@@ -1,11 +1,8 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 from selenium import webdriver
 import os
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
-cap = DesiredCapabilities().FIREFOX
-cap["marionette"] = True
 
 URLs = [
     'https://www.investing.com/equities/mts_rts',
@@ -21,15 +18,23 @@ with open('js/script.js', 'r') as f:
 
 drivers = []
 for url in URLs:
-    os.environ['MOZ_HEADLESS'] = '1'
-    driver = webdriver.Firefox(capabilities=cap, executable_path="/usr/local/bin/geckodriver")
+    options = webdriver.ChromeOptions()
+    options.add_argument('--no-sandbox')
+    options.add_argument('headless')
+    driver = webdriver.Chrome(options=options)
+    #driver = webdriver.Chrome()
     drivers.append(driver)
     driver.get(url)
     driver.implicitly_wait(3.0)
     try:
         driver.execute_script(script=script)
-    except Exception as ex:
-        print(ex)
-    print(len(drivers))
+    except Exception, ex:
+        print ex
+    print len(drivers)
+
+
+
+
+
 
 

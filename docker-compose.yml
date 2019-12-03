@@ -26,6 +26,7 @@ services:
     volumes:
       - ./webdrv/app:/usr/src/app
       - ./webdrv/data:/data
+      - /dev/shm:/dev/shm
     dns: 8.8.8.8
     ports:
       - "5900:5900"
