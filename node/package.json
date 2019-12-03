@@ -1,0 +1,31 @@
+{
+  "name": "nodescript",
+  "version": "1.0.0",
+  "description": "nodescript",
+  "dependencies": {
+    "body-parser": "*",
+    "consolidate": "*",
+    "cookie-parser": "*",
+    "express": "*",
+    "express-fileupload": "*",
+    "socket.io": "*",
+    "swig": "*",
+    "urlencode": "*",
+    "ssl-root-cas": "latest",
+    "puppeteer": "latest",
+    "pg": "latest",
+    "getenv": "latest"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kuzovkov/nodescript.git"
+  },
+  "keywords": [
+    "nodescript"
+  ],
+  "author": "kuzovkov"
+}

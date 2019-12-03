@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+</head>
+<style>
+    #data {overflow-y: scroll; min-width: 80%; height: 400px; border: 2px solid grey; border-radius: 5px; background-color: #ccc; font-size: 0.8em;}
+</style>
+<body>
+
+<h3>It works!</h3>
+<hr/>
+
+<script>
+
+
+    var rows = [];
+    var dataobj = {};
+
+    var ws = io('ws://'+window.location.host, {transports: ['websocket'], path: '/socket.io', query: {}});
+    ws.on('connect', function () {console.log('WS connect');});
+    //ws.on('reconnect_attempt', function () {ws.io.opts.transports = ['polling', 'websocket'];});
+    //ws.on('disconnect', function () {console.log('WS disconnected');});
+    //ws.on('event', function (data) {console.log(data);});
+    //ws.on('connect_error', function(error){console.log(error);});
+    ws.on('data', function (data) {
+        logData(data);
+        tableData(data);
+    });
+
+    function logData(data){
+        var div  = document.getElementById('data');
+        rows.push(JSON.stringify(data));
+        rows = rows.slice(rows.length-200);
+        div.innerHTML = rows.join('<br>');
+        div.scrollTop = 9999;
+    }
+
+    function tableData(data) {
+        if (dataobj[data.symbol] === undefined){
+            dataobj[data.symbol] = {value: data.value, timestamp: data.timestamp};
+        }else{
+            if (dataobj[data.symbol].value > data.value)
+                dataobj[data.symbol] = {value: data.value, timestamp: data.timestamp, direction: 'down'};
+            else if (dataobj[data.symbol].value < data.value)
+                dataobj[data.symbol] = {value: data.value, timestamp: data.timestamp, direction: 'up'};
+            else
+                dataobj[data.symbol] = {value: data.value, timestamp: data.timestamp, direction: 'zero'};
+        }
+
+        var tbody = document.querySelector('table#data-table tbody');
+        tbody.innerHTML = '';
+        for (var symbol in dataobj){
+            var tr = document.createElement('tr');
+            var td = document.createElement('td');
+            td.innerHTML = symbol;
+            tr.appendChild(td);
+            td = document.createElement('td');
+            td.innerHTML = dataobj[symbol].value;
+            tr.appendChild(td);
+            td = document.createElement('td');
+            td.innerHTML = (new Date(parseInt(dataobj[symbol].timestamp))).toLocaleString();
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+        }
+    }
+
+</script>
+<label>Data log</label>
+<div id="data">
+</div>
+
+<p>&nbsp;</p>
+<hr>
+<p>&nbsp;</p>
+<label>Data table</label>
+<table id="data-table" class="table table-dark">
+    <thead>
+        <th>Symbol</th>
+        <th>Value</th>
+        <th>Time</th>
+    </thead>
+    <tbody></tbody>
+</table>
+
+
+</body>
+</html>
