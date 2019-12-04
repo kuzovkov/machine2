@@ -14,7 +14,7 @@
 </style>
 <body>
 
-<h3>It works!</h3>
+<h3>Realtime over WebSockets</h3>
 <hr/>
 
 <script>
@@ -42,7 +42,8 @@
         div.scrollTop = 9999;
     }
 
-    function tableData(data) {
+
+    function initDataObj(data){
         if (dataobj[data.symbol] === undefined){
             dataobj[data.symbol] = {value: data.value, timestamp: data.timestamp};
         }else{
@@ -53,7 +54,16 @@
             else
                 dataobj[data.symbol] = {value: data.value, timestamp: data.timestamp, direction: 'zero'};
         }
+    }
 
+    function tableData(data) {
+        if (typeof(data.length) === 'number'){
+            for (var i = 0; i < data.length; i++){
+                initDataObj(data[i]);
+            }
+        }else{
+            initDataObj(data);
+        }
         var tbody = document.querySelector('table#data-table tbody');
         tbody.innerHTML = '';
         for (var symbol in dataobj){

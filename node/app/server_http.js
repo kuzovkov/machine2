@@ -59,19 +59,18 @@ app.post('/data', function (req, res) {
     res.set({'Access-Control-Allow-Origin': '*'});
     try{
         data = req.body;
-        //console.log(data);
         if (typeof(data) === 'string')
             data = JSON.parse(data);
-        store.insertData(data);
+        if (data.data !== undefined)
+            data = data.data;
+        //console.log(data);
+        //store.insertData(data);
         shareData(sockets, data);
     }catch (e){
         console.error(e.message);
     }
     res.send(req.body);
 });
-
-
-
 
 io.on('connection', function(socket){
     console.log('Socket connected, id=', socket.id);

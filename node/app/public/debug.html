@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Debug</title>
 </head>
 <body>
 
@@ -12,5 +12,16 @@
     var t = parseInt("1575370044280");
     var d = new Date(t);
     console.log(d.toLocaleString());
+
+    var x = {a: 5, b: 7};
+    var y = [2, 5, x];
+
+    console.log(typeof(x.length) === 'number');
+    console.log(typeof(y.length) === 'number');
+
+    var z = {array: y};
+
+    console.log(z.array[2]);
+
 </script>
 </html>

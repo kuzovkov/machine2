@@ -18,11 +18,21 @@ const client = new Client({
 
 function insertData(data) {
     //console.log(data);
+    if (typeof(data.length) === 'number'){
+        for (var i = 0; i < data.length; i++){
+            insertRow(data[i]);
+        }
+    }else{
+        insertRow(data);
+    }
 
+}
+
+function insertRow(data){
     client.query('INSERT INTO courses (symbol, price, time_stamp) VALUES ($1, $2, $3);', [data.symbol, data.value, data.timestamp], function (err, result) {
-      if (err) {
-        console.log(err);
-      }
+        if (err) {
+            console.log(err);
+        }
     });
 }
 

@@ -5,22 +5,19 @@ import os
 
 
 URLs = [
-    'https://www.investing.com/equities/mts_rts',
-    'https://www.investing.com/equities/vtb_rts',
-    'https://www.investing.com/equities/gazprom_rts',
-    'https://www.investing.com/equities/sberbank_rts'
+    'https://libertex.fxclub.org/products/currency/'
 ]
 
-with open('js/investing.com.js', 'r') as f:
+with open('js/libertex.fxclub.org.js', 'r') as f:
     script = f.read()
 
-#print script
+print script
 
 drivers = []
 for url in URLs:
     options = webdriver.ChromeOptions()
     options.add_argument('--no-sandbox')
-    options.add_argument('headless')
+    #options.add_argument('headless')
     driver = webdriver.Chrome(options=options)
     #driver = webdriver.Chrome()
     drivers.append(driver)

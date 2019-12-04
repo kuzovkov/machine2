@@ -54,7 +54,7 @@ RUN apt-get install -y sudo && \
     chmod 0440 /etc/sudoers.d/apps
 
 #install nginx
-RUN apt-get install -y nginx
+RUN apt-get install -y nginx psmisc net-tools mc htop
 
 COPY ./nginx/default.conf /etc/nginx/sites-enabled/default
 
