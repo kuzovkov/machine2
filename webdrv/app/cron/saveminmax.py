@@ -10,6 +10,9 @@ from mylogger import logger
 from pg import PgSQLStore
 from rc import RedisClient
 from pprint import pprint
+import time
+import json
+import datetime
 
 
 rc = RedisClient().getRc()
@@ -37,6 +40,19 @@ pprint(symbols)
 print('-' * 80)
 forecasts = db_fforecast._get('forecast')
 pprint(forecasts)
+print('-' * 80)
+pipe = rc.pipeline()
+key = symbols[0]['scode']+'@'+'source_id'
+res = pipe.rpush(key, json.dumps({
+    'max_price': float(symbols[0]['price']),
+    'min_price': float(symbols[0]['price']),
+    'date_max': str(symbols[0]['updated_at'])
+})).execute()
+pprint(res[0])
+print('-' * 80)
+data = rc.lrange(key, 0, -1)
+pprint(data)
+
 
 
 

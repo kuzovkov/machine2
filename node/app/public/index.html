@@ -73,6 +73,12 @@
             tr.appendChild(td);
             td = document.createElement('td');
             td.innerHTML = dataobj[symbol].value;
+            if (dataobj[symbol].direction === 'up')
+                    td.style = "color: green";
+                else if (dataobj[symbol].direction === 'down')
+                    td.style = "color: red";
+                else
+                    td.style = "color: white";
             tr.appendChild(td);
             td = document.createElement('td');
             td.innerHTML = (new Date(parseInt(dataobj[symbol].timestamp))).toLocaleString();

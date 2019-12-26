@@ -18,5 +18,5 @@ db = {
 
 REDIS_HOST = 'redis'
 REDIS_PORT = 6379
-REDIS_PASSWORD = 'kpaHqGrSvJf5TLCU'
+REDIS_PASSWORD = None #'kpaHqGrSvJf5TLCU'
 
