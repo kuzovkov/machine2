@@ -16,6 +16,10 @@ const client = new Client({
 });
  client.connect();
 
+/**
+ * insert Data
+ * @param data
+ */
 function insertData(data) {
     //console.log(data);
     if (typeof(data.length) === 'number'){
@@ -28,8 +32,14 @@ function insertData(data) {
 
 }
 
+/**
+ * insert Row
+ * @param data
+ */
 function insertRow(data){
-    client.query('INSERT INTO courses (symbol, price, time_stamp) VALUES ($1, $2, $3);', [data.symbol, data.value, data.timestamp], function (err, result) {
+    var d = new Date(data.timestamp);
+    sql = "INSERT INTO symbol (name, scode, price, updated_at) VALUES ($1, $2, $3, $4) ON CONFLICT (scode) DO UPDATE SET name=$1, price=$3, updated_at=$4";
+    client.query(sql, [data.symbol, data.symbol, data.value, d], function (err, result) {
         if (err) {
             console.log(err);
         }

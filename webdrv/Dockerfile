@@ -58,6 +58,9 @@ RUN apt-get install -y nginx psmisc net-tools mc htop
 
 COPY ./nginx/default.conf /etc/nginx/sites-enabled/default
 
+RUN pip install --upgrade pip
+RUN pip install redis psycopg2-binary datetime
+
 COPY bootstrap.sh /
 
 CMD '/bootstrap.sh'

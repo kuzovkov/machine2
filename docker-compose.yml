@@ -34,7 +34,7 @@ services:
     user: apps
 
   db:
-    image: postgres:10.6
+    image: postgres:12.1
     environment:
       POSTGRES_PASSWORD: Admin123456
       POSTGRES_USER: postgres
@@ -49,5 +49,17 @@ services:
       - "15432:5432"
     command: postgres -c config_file=/etc/postgresql/postgresql.conf
 
+  redis:
+    image: redis:4.0.5-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    hostname: redis
+    volumes:
+      - redis-data:/data
+    expose:
+      - 6379
+    environment:
+      REDIS_PASSWORD: kpaHqGrSvJf5TLCU
+
 volumes:
   db-data: {}
+  redis-data: {}

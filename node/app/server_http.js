@@ -64,7 +64,7 @@ app.post('/data', function (req, res) {
         if (data.data !== undefined)
             data = data.data;
         //console.log(data);
-        //store.insertData(data);
+        store.insertData(data);
         shareData(sockets, data);
     }catch (e){
         console.error(e.message);

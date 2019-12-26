@@ -33,18 +33,12 @@ SET default_tablespace = '';
 
 SET default_with_oids = false;
 
-ALTER ROLE postgres WITH PASSWORD 'xtramileDev';
-CREATE ROLE xtramile LOGIN INHERIT PASSWORD 'xtramileDev' SUPERUSER;
-GRANT postgres TO xtramile;
+ALTER ROLE postgres WITH PASSWORD 'Admin123456';
+CREATE ROLE parser LOGIN INHERIT PASSWORD 'Admin123456' SUPERUSER;
+GRANT postgres TO parser;
 
-DROP DATABASE IF EXISTS  xtramile;
-CREATE DATABASE  xtramile WITH TEMPLATE = template0 ENCODING = 'UTF8' LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' OWNER xtramile;
-
-DROP DATABASE IF EXISTS  xtramile_dev;
-CREATE DATABASE xtramile_dev WITH TEMPLATE = template0 ENCODING = 'UTF8' LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' OWNER xtramile;
-
-CREATE ROLE xtramile_read LOGIN INHERIT;
-GRANT postgres TO xtramile_read;
+DROP DATABASE IF EXISTS  courses;
+CREATE DATABASE  courses WITH TEMPLATE = template0 ENCODING = 'UTF8' LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' OWNER parser;
 
 CREATE ROLE readonlyuser LOGIN INHERIT;
 GRANT postgres TO readonlyuser;
