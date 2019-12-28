@@ -15,6 +15,7 @@ var port_default = 80;
 var port = (process.argv.length > 2)? parseInt(process.argv[2]) : port_default;
 var cons = require('consolidate');
 var store = require('./modules/store.js');
+var tracker = require('./modules/tracker.js');
 var sockets = {};
 
 server.listen(port,function(){
@@ -64,8 +65,9 @@ app.post('/data', function (req, res) {
         if (data.data !== undefined)
             data = data.data;
         //console.log(data);
-        store.insertData(data);
-        shareData(sockets, data);
+        store.insertData(data); //update courses in database
+        shareData(sockets, data); //send date to connected browsers
+        tracker.track(data); //track forecasts for best price
     }catch (e){
         console.error(e.message);
     }

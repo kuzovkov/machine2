@@ -60,6 +60,7 @@ COPY ./nginx/default.conf /etc/nginx/sites-enabled/default
 
 RUN pip install --upgrade pip
 RUN pip install redis psycopg2-binary datetime
+RUN pip install terminaltables
 
 COPY bootstrap.sh /
 

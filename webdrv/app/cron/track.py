@@ -14,11 +14,13 @@ import time
 import json
 import datetime
 from optparse import OptionParser
+from terminaltables import SingleTable
 
 parser = OptionParser()
 parser.add_option('--debug', action='store_true', dest='debug_mode', help='Debug mode')
-parser.add_option('--show-tracked', action='store_true', dest='show_tracked', type='string', help='Get all tracked forecasts from Redis')
-parser.add_option('--show-status', action='store_true', dest='show_status', type='string', help='Get all statuses forecasts from Redis')
+parser.add_option('--show-tracked-redis', action='store_true', dest='show_tracked', help='Get all tracked forecasts from Redis')
+parser.add_option('--show-status-redis', action='store_true', dest='show_status', help='Get all statuses forecasts from Redis')
+parser.add_option('--show-tracked', action='store_true', dest='get_tracked', help='Get all statuses forecasts from Redis')
 
 (options, args) = parser.parse_args()
 
@@ -43,6 +45,8 @@ db_courses = PgSQLStore(db_courses_conf)
 db_fforecast = PgSQLStore(db_fforecast_conf)
 
 SOURCE_ID = 'libertex_fxclub'
+TRACKED_FORECASTS_HASH_NAME = 'tracked_forecasts'
+STATUS_FORECASTS_HASH_NAME = 'status_forecasts'
 
 def markTrackedForecasts():
     sql = '''UPDATE forecast SET tracked=TRUE WHERE id IN
@@ -83,30 +87,25 @@ def getClosedForecasts(interval='1 day'):
 
 def updateTrackedInRedis(forecasts):
     pipe = rc.pipeline()
+    hash_name = TRACKED_FORECASTS_HASH_NAME
     for forecast in forecasts:
-        key = ':'.join(['tracked_forecasts', str(int(forecast['id']))])
-        payload = {'id': int(forecast['id']), 'code': forecast['code'], 'price': float(forecast['price'])}
-        pipe.hmset(key, payload)
+        key = str(int(forecast['id']))
+        payload = json.dumps({'id': int(forecast['id']), 'code': forecast['code'], 'price': float(forecast['price'])})
+        pipe.hmset(hash_name, {key: payload})
     pipe.execute()
     pipe.close()
 
-def getDataFromRedis(forecasts, key_name):
-    data = {}
-    for forecast in forecasts:
-        key = ':'.join([key_name, str(int(forecast['id']))])
-        data[int(forecast['id'])] = rc.hgetall(key)
+def getDataFromRedis(hash_name):
+    data = rc.hgetall(hash_name)
     return data
 
 def updateClosedInRedis(forecasts):
-    data = {}
-    for forecast in forecasts:
-        key = ':'.join(['tracked_forecasts', str(int(forecast['id']))])
-        data[int(forecast['id'])] = rc.hgetall(key)
+    data = rc.hgetall(STATUS_FORECASTS_HASH_NAME)
     pipe = rc.pipeline()
     for forecast in forecasts:
-        fields = ['id', 'code', 'price']
-        key = ':'.join(['tracked_forecasts', str(int(forecast['id']))])
-        pipe.hdel(key, fields)
+        key = str(int(forecast['id']))
+        pipe.hdel(STATUS_FORECASTS_HASH_NAME, key)
+        pipe.hdel(TRACKED_FORECASTS_HASH_NAME, key)
     pipe.execute()
     pipe.close()
     return data
@@ -139,11 +138,14 @@ def closeForecasts():
     db_fforecast.execute(sql)
 
 def main():
+    print '-' * 60
+    print 'Main'
+    print '-' * 60
     markTrackedForecasts()
     tf = getTrackedForecasts()
     # pprint(tf)
     updateTrackedInRedis(tf)
-    data = getDataFromRedis(tf, 'status_forecasts')
+    data = getDataFromRedis(STATUS_FORECASTS_HASH_NAME)
     updatePriceClosed(data)
     renewForecasts()
     closeForecasts()
@@ -152,21 +154,41 @@ def main():
     data = updateClosedInRedis(cf)
     updatePriceClosed(data)
 
+
+def showAsTable(data):
+    if len(data) > 0:
+        headers = data[0].keys()
+        table_data = map(lambda row: row.values(), data)
+        table_data = [headers] + table_data
+        table = SingleTable(table_data)
+        print(table.table)
+    else:
+        print 'Nothing to show'
+
 def debug():
+    print '-'*60
     print 'Debug'
+    print '-' * 60
+    #markTrackedForecasts()
+    tf = getTrackedForecasts()
+    # pprint(tf)
+    updateTrackedInRedis(tf)
+    #data = updateClosedInRedis(tf)
+    #pprint(data)
 
 
 if __name__ == '__main__':
-    if options.debug:
+    if options.debug_mode:
         debug()
     elif options.show_tracked:
-        tf = getTrackedForecasts()
-        data = getDataFromRedis(tf, 'tracked_forecasts')
+        data = getDataFromRedis(TRACKED_FORECASTS_HASH_NAME)
         pprint(data)
-    elif options.show_tracked:
-        tf = getTrackedForecasts()
-        data = getDataFromRedis(tf, 'status_forecasts')
+    elif options.show_status:
+        data = getDataFromRedis(STATUS_FORECASTS_HASH_NAME)
         pprint(data)
+    elif options.get_tracked:
+        tf = getTrackedForecasts()
+        showAsTable(tf)
     else:
         main()
 

@@ -17,6 +17,9 @@ services:
       DB_USER: postgres
       DB_NAME: courses
       DB_PASS: Admin123456
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: kpaHqGrSvJf5TLCU
 
   webdrv:
     privileged: true

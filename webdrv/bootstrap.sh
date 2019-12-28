@@ -7,10 +7,10 @@ readonly G_LOG_W='[WARN]'
 readonly G_LOG_E='[ERROR]'
 
 main() {
+    run_nginx
     launch_xvfb
     launch_window_manager
     run_vnc_server
-    run_nginx
 }
 
 launch_xvfb() {

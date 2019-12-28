@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-rc = require('./rc.js').rc;
+rc = require('../modules/rc.js').rc;
 
 rc.set('my test key', 'my test value');
 rc.get('my test key', function (error, result) {
