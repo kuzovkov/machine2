@@ -14,7 +14,8 @@
     "ssl-root-cas": "latest",
     "puppeteer": "latest",
     "pg": "latest",
-    "getenv": "latest"
+    "getenv": "latest",
+    "redis": "latest"
   },
   "devDependencies": {},
   "scripts": {

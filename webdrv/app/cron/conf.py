@@ -1,7 +1,12 @@
+import os
+
+host_ip = os.popen("route | grep default | awk {'print $2'}").read()
 db = {
     'fforecast': {
-        'DB_HOST': 'fp.double.systems',
-        'DB_PORT': 35432,
+        #'DB_HOST': 'fp.double.systems',  #dev
+        #'DB_PORT': 35432,                #dev
+        'DB_PORT': 25432,                 #local
+        'DB_HOST': host_ip,               #local
         'DB_USER': 'fforecast',
         'DB_NAME': 'fforecast',
         'DB_PASSWORD': 'Admin123456'
