@@ -34,10 +34,11 @@ function track(data){
     var trackedForecasts = {};
     var statusForecasts = {};
     for(var i = 0; i < data.length; i++){
+        var symbol = data[i].symbol;
         dataIndex1[symbol] = i;
-        var alias = [symbol.substring(0, 3), symbol.substring(3)].join('_'); 
+        var alias = [symbol.substring(0, 3), symbol.substring(3)].join('_');
         dataIndex2[alias] = i;
-        alias = [symbol.substring(0, 3), symbol.substring(3)].join('/'); 
+        alias = [symbol.substring(0, 3), symbol.substring(3)].join('/');
         dataIndex3[alias] = i;
     }
     
@@ -62,29 +63,30 @@ function track(data){
             console.log(err);
         })
         .then(function (res) {
-            //update statusForecasts jbject in memory
+            //update statusForecasts object in memory
             for(var trackedForecastId in trackedForecasts){
-                var symbol = trackedForecasts[forecastId]['code'];
+                var symbol = trackedForecasts[trackedForecastId]['code'];
                 var symbolIndex = symbolIndex = dataIndex1[symbol] || dataIndex2[symbol] || dataIndex3[symbol];
                 if (symbolIndex == undefined)
                     continue;
                 if (statusForecasts[trackedForecastId] == undefined){
-                    var payload = {'forecast_id': trackedForecastId, 'price': data[symbolIndex].value, 'timestamp': data[symbolIndex].timestamp, 'source_id': data[symbolIndex].source_id};
+                    var payload = {'forecast_id': trackedForecastId, 'price': data[symbolIndex].value, 'timestamp': (new Date(data[symbolIndex].timestamp)).toISOString(), 'source_id': data[symbolIndex].source_id};
                     statusForecasts[trackedForecastId] = JSON.stringify(payload);
                 }else{
                     var newPrice = data[symbolIndex].value;
                     var oldPrice = statusForecasts[trackedForecastId].price;
                     var forecastPrice =trackedForecasts[trackedForecastId].price;
                     if (newPriceIsBetter(newPrice, oldPrice, forecastPrice)){
-                        var payload = {'forecast_id': trackedForecastId, 'price': newPrice, 'timestamp': data[symbolIndex].timestamp, 'source_id': data[symbolIndex].source_id};
+                        var payload = {'forecast_id': trackedForecastId, 'price': newPrice, 'timestamp': (new Date(data[symbolIndex].timestamp)).toISOString(), 'source_id': data[symbolIndex].source_id};
                         statusForecasts[trackedForecastId] = JSON.stringify(payload);
+                    }else{
+                        delete statusForecasts[trackedForecastId];
                     }
                 }
-                //update STATUS_FORECASTS_HASH in Redis
-                rc.hmset(STATUS_FORECASTS_HASH_NAME, statusForecasts, function (err, res) {
-                    console.log(res);
-                })
             }
+            //update STATUS_FORECASTS_HASH in Redis
+            if (Object.keys(statusForecasts).length > 0)
+                rc.hmset(STATUS_FORECASTS_HASH_NAME, statusForecasts);
         })
 }
 

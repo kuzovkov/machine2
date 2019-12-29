@@ -28,3 +28,18 @@ console.log(symbolIndex);
 console.log(dataIndex1['A'] == undefined);
 console.log(dataIndex1['M'] == undefined);
 
+
+var data = {
+            '1543': '{"price": 67.0, "code": "USD_RUB", "id": 1543}',
+            '1544': '{"price": 75.0, "code": "USD_RUB", "id": 1544}',
+            '1556': '{"price": 74.25, "code": "EUR_RUB", "id": 1556}'
+        };
+
+delete data['1544'];
+
+console.log(data);
+
+var data2 = {};
+console.log(Object.keys(data).length);
+console.log(Object.keys(data2).length);
+

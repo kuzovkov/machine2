@@ -56,7 +56,7 @@ app.get('/', function (req, res) {
 });
 
 app.post('/data', function (req, res) {
-    console.log(JSON.stringify(req.body));
+    //console.log(JSON.stringify(req.body));
     res.set({'Access-Control-Allow-Origin': '*'});
     try{
         data = req.body;
