@@ -67,7 +67,8 @@ app.post('/data', function (req, res) {
         //console.log(data);
         store.insertData(data); //update courses in database
         shareData(sockets, data); //send date to connected browsers
-        tracker.track(data); //track forecasts for best price
+        tracker.track(data); //track symbols price for check best forecast's price
+        tracker.saveRawData(data); //save raw data to redis for control
     }catch (e){
         console.error(e.message);
     }

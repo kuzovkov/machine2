@@ -3,14 +3,12 @@
     var source_id = 'libertex_fxclub'
     function sendData() {
         var SymbolsNodesList = document.querySelectorAll('div.products-list div.row div.icon-product a');
-        var ValuesNodesList = document.querySelectorAll('div.products-list div.row div[class="col col-rate"] span');
-        if (ValuesNodesList.length == 0)
-            ValuesNodesList = document.querySelectorAll('div.products-list div.row div[class="col col-rate"]');
+        var ValuesNodesList = document.querySelectorAll('div.products-list div.row div[class="col col-rate"]');
         var count = Math.min(SymbolsNodesList.length, ValuesNodesList.length);
         var timestamp = (new Date()).getTime();
         var data = [];
         for (var i = 0; i < count; i++){
-            var item = {symbol: SymbolsNodesList[i].href.split('/')[5], value: ValuesNodesList[i].innerHTML, timestamp: timestamp, source_id: source_id};
+            var item = {symbol: SymbolsNodesList[i].href.split('/')[5], value: ValuesNodesList[i].innerText, timestamp: timestamp, source_id: source_id};
             data.push(item);
         }
         $.ajax({

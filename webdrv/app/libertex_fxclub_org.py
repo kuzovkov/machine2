@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 
 from selenium import webdriver
-import os
-
+import os, sys
 
 URLs = [
     'https://libertex.fxclub.org/products/currency/'
 ]
 
-with open('js/libertex.fxclub.org.js', 'r') as f:
+with open('/usr/src/app/js/libertex.fxclub.org.js', 'r') as f:
     script = f.read()
 
-#print script
 
+#print script
 drivers = []
+driver = None
 for url in URLs:
     options = webdriver.ChromeOptions()
     options.add_argument('--no-sandbox')
@@ -28,6 +28,7 @@ for url in URLs:
     except Exception, ex:
         print ex
     print len(drivers)
+
 
 
 

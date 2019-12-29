@@ -4,6 +4,7 @@ rc = require('../modules/rc.js').rc;
 
 const TRACKED_FORECASTS_HASH_NAME = 'tracked_forecasts';
 const STATUS_FORECASTS_HASH_NAME = 'status_forecasts';
+const RAW_DATA_HASH_NAME = 'raw_data';
 
 /**
  * getHashData
@@ -101,4 +102,13 @@ function newPriceIsBetter(newPrice, oldPrice, forecastPrice){
     return (Math.abs(forecastPrice - newPrice) < Math.abs(forecastPrice - oldPrice)) && newPrice >= forecastPrice;
 }
 
+/**
+ * Save raw data to Redis
+ * @param data array of objects [{symbol: symbol, value: value, timestamp: timestamp, source_id: source_id }, ...]
+ */
+function saveRawData(data) {
+    rc.hmset(RAW_DATA_HASH_NAME, {'data': JSON.stringify(data)});
+}
+
 exports.track = track;
+exports.saveRawData = saveRawData;

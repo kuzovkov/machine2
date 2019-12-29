@@ -15,6 +15,7 @@ import json
 import datetime
 from optparse import OptionParser
 from terminaltables import SingleTable
+import os
 
 parser = OptionParser()
 parser.add_option('--debug', action='store_true', dest='debug_mode', help='Debug mode')
@@ -49,6 +50,7 @@ db_fforecast = PgSQLStore(db_fforecast_conf)
 SOURCE_ID = 'libertex_fxclub'
 TRACKED_FORECASTS_HASH_NAME = 'tracked_forecasts'
 STATUS_FORECASTS_HASH_NAME = 'status_forecasts'
+RAW_DATA_HASH_NAME = 'raw_data'
 
 def markTrackedForecasts():
     sql = '''UPDATE forecast SET tracked=TRUE WHERE id IN
@@ -200,6 +202,29 @@ def showAsTable(data, pr=True):
 
 def failover():
     logger.info('failover')
+    nginx_instances = int(os.popen("ps -A | grep nginx | wc -l").read())
+    if nginx_instances == 0:
+        logger.info('Nginx process not found, try launch...')
+        logger.info(os.popen('sudo nginx').read())
+        time.sleep(3)
+    else:
+        logger.info('{count} nginx\'s processed found'.format(count=nginx_instances))
+    logger.info('Checking raw data...')
+    raw_data = getDataFromRedis(RAW_DATA_HASH_NAME)
+    if len(raw_data) > 0:
+        raw_data = json.loads(raw_data['data'])
+        logger.info('Raw data:')
+        showAsTable(raw_data)
+        if len(raw_data) > 0:
+            if 'source_id' in raw_data[0] and 'symbol' in raw_data[0] and 'timestamp' in raw_data[0] and 'value' in raw_data[0]:
+                if (int(time.time()) - raw_data[0]['timestamp']/1000) < 10:
+                    logger.info('Last update: {time}'.format(time=datetime.datetime.fromtimestamp(raw_data[0]['timestamp']/1000)))
+                    logger.info('OK')
+                    return
+    logger.info('Raw is not OK, try relaunch browser...')
+    logger.info(os.popen("sudo killall -9 chrome").read())
+    time.sleep(10)
+    logger.info(os.system("/usr/src/app/libertex_fxclub_org_d.py"))
 
 def debug():
     print '-'*60
