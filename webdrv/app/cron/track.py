@@ -20,7 +20,9 @@ parser = OptionParser()
 parser.add_option('--debug', action='store_true', dest='debug_mode', help='Debug mode')
 parser.add_option('--show-tracked-redis', action='store_true', dest='show_tracked', help='Get all tracked forecasts from Redis')
 parser.add_option('--show-status-redis', action='store_true', dest='show_status', help='Get all statuses forecasts from Redis')
-parser.add_option('--show-tracked', action='store_true', dest='get_tracked', help='Get all statuses forecasts from Redis')
+parser.add_option('--show-tracked', action='store_true', dest='get_tracked', help='Get tracked forecasts from Database')
+parser.add_option('--track', action='store_true', dest='track', help='Save best prices for tracked forecasts in Redis')
+parser.add_option('--failover', action='store_true', dest='failover', help='Check that all works as we need')
 
 (options, args) = parser.parse_args()
 
@@ -110,13 +112,19 @@ def updateClosedInRedis(forecasts):
     pipe.close()
     return data
 
-def updatePriceClosed(data):
-    pprint(data)
+def updateBestPrice(data):
+    db = db_fforecast
+    db.dbopen()
+    for item in data.values():
+        item = json.loads(item)
+        db.cur.execute('UPDATE forecast SET best_price=%s, best_price_time=%s WHERE id=%s', [float(item['price']), item['timestamp'], int(item['forecast_id'])])
+    db.conn.commit()
+    db.dbclose()
 
 def renewForecasts():
     sql = '''UPDATE forecast SET status='renew', date_forecast=date_forecast + (date_forecast-created_at)/4
-             WHERE status='active' and price_closed NOTNULL
-             AND date_forecast < current_timestamp AND price_closed < price_forecast
+             WHERE status='active' and best_price NOTNULL
+             AND date_forecast < current_timestamp AND best_price < price_forecast
              AND current_timestamp < date_forecast + (date_forecast-created_at)/4'''
     db_fforecast.execute(sql)
 
@@ -127,43 +135,71 @@ def closeForecasts():
     db_fforecast.execute(sql)
 
     sql = '''UPDATE forecast SET status='completed', closed_at=current_timestamp, tracked=FALSE
-            WHERE status='renew' AND date_forecast > current_timestamp AND price_closed NOTNULL
-            AND price_closed > price_forecast'''
+            WHERE status='renew' AND date_forecast > current_timestamp AND best_price NOTNULL
+            AND best_price > price_forecast'''
     db_fforecast.execute(sql)
 
     sql = '''UPDATE forecast SET status='completed', closed_at=current_timestamp, tracked=FALSE
             WHERE status='active' AND date_forecast > current_timestamp AND
             current_timestamp < (date_forecast + (date_forecast-created_at)/4)
-            AND price_closed NOTNULL AND price_closed > price_forecast'''
+            AND best_price NOTNULL AND best_price > price_forecast'''
     db_fforecast.execute(sql)
 
-def main():
+def track():
     print '-' * 60
     print 'Main'
     print '-' * 60
     markTrackedForecasts()
     tf = getTrackedForecasts()
-    # pprint(tf)
+    logger.info('Tracked forecasts:')
+    showAsTable(tf)
     updateTrackedInRedis(tf)
     data = getDataFromRedis(STATUS_FORECASTS_HASH_NAME)
-    updatePriceClosed(data)
+    logger.info('Tracked forecasts status in redis:')
+    showAsTable(data)
+    updateBestPrice(data)
+    logger.info('renew Forecasts')
     renewForecasts()
+    logger.info('close Forecasts')
     closeForecasts()
     cf = getClosedForecasts()
-    #pprint(cf)
+    logger.info('Closed forecasts:')
+    showAsTable(cf)
     data = updateClosedInRedis(cf)
-    updatePriceClosed(data)
+    updateBestPrice(data)
+    logger.info('Done')
 
 
-def showAsTable(data):
+def showAsTable(data, pr=True):
     if len(data) > 0:
-        headers = data[0].keys()
-        table_data = map(lambda row: row.values(), data)
-        table_data = [headers] + table_data
-        table = SingleTable(table_data)
-        print(table.table)
+        if (type(data) is list and type(data[0]) is dict):
+            headers = data[0].keys()
+            table_data = map(lambda row: row.values(), data)
+            table_data = [headers] + table_data
+            table = SingleTable(table_data)
+            if pr:
+                print(table.table)
+            else:
+                return table.table
+        elif (type(data) is dict):
+            headers = table_data = []
+            if type(data.values()[0]) is str:
+                headers = json.loads(data.values()[0]).keys()
+                table_data = map(lambda row: json.loads(row).values(), data.values())
+            elif type(data.values()[0]) is dict:
+                headers = (data.values()[0]).keys()
+                table_data = map(lambda row: row.values(), data.values())
+            table_data = [headers] + table_data
+            table = SingleTable(table_data)
+            if pr:
+                print(table.table)
+            else:
+                return table.table
     else:
         print 'Nothing to show'
+
+def failover():
+    logger.info('failover')
 
 def debug():
     print '-'*60
@@ -171,8 +207,13 @@ def debug():
     print '-' * 60
     #markTrackedForecasts()
     tf = getTrackedForecasts()
+    showAsTable(tf)
+    data = getDataFromRedis(TRACKED_FORECASTS_HASH_NAME)
+    showAsTable(data)
+    data = getDataFromRedis(STATUS_FORECASTS_HASH_NAME)
+    showAsTable(data)
     # pprint(tf)
-    updateTrackedInRedis(tf)
+    #updateTrackedInRedis(tf)
     #data = updateClosedInRedis(tf)
     #pprint(data)
 
@@ -182,47 +223,19 @@ if __name__ == '__main__':
         debug()
     elif options.show_tracked:
         data = getDataFromRedis(TRACKED_FORECASTS_HASH_NAME)
-        pprint(data)
+        showAsTable(data)
     elif options.show_status:
         data = getDataFromRedis(STATUS_FORECASTS_HASH_NAME)
-        pprint(data)
+        showAsTable(data)
     elif options.get_tracked:
         tf = getTrackedForecasts()
         showAsTable(tf)
+    elif options.track:
+        track()
+    elif options.failover:
+        failover()
     else:
-        main()
-
-
-
-
-'''
-symbols = db_courses._get('symbol')
-pprint(symbols)
-print('-' * 80)
-forecasts = db_fforecast._get('forecast')
-pprint(forecasts)
-print('-' * 80)
-pipe = rc.pipeline()
-key = symbols[0]['scode']+'@'+'source_id'
-res = pipe.rpush(key, json.dumps({
-    'max_price': float(symbols[0]['price']),
-    'min_price': float(symbols[0]['price']),
-    'date_max': str(symbols[0]['updated_at'])
-})).execute()
-pprint(res[0])
-print('-' * 80)
-data = rc.lrange(key, 0, -1)
-pprint(data)
-print('-' * 80)
-forecast_id = 125
-source_id = 'libertex_fxclub'
-timestamp = datetime.datetime.now()
-res = rc.hmset(':'.join([str(source_id), str(forecast_id)]), {'forecast_id': forecast_id, 'source_id': source_id, 'price': float(symbols[1]['price']), 'timestamp': str(timestamp)})
-pprint(res)
-data = rc.hmget(':'.join([str(source_id), str(forecast_id)]), ['forecast_id', 'source_id', 'price', 'timestamp'])
-pprint(data)
-rc.lrem(key, 0, '{"min_price": 142.432, "max_price": 142.432, "date_max": "2019-12-26 22:50:08.246000"}')
-'''
+        pass
 
 
 
