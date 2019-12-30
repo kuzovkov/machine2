@@ -94,6 +94,7 @@ def updateTrackedInRedis(forecasts):
     hash_name = TRACKED_FORECASTS_HASH_NAME
     for forecast in forecasts:
         key = str(int(forecast['id']))
+        #TODO: оптимизировать
         payload = json.dumps({'id': int(forecast['id']), 'code': forecast['code'], 'price': float(forecast['price'])})
         pipe.hmset(hash_name, {key: payload})
     pipe.execute()
@@ -151,7 +152,7 @@ def track():
     print '-' * 60
     print 'Main'
     print '-' * 60
-    markTrackedForecasts()
+    #markTrackedForecasts() - tracked не используется
     tf = getTrackedForecasts()
     logger.info('Tracked forecasts:')
     showAsTable(tf)
@@ -159,10 +160,13 @@ def track():
     data = getDataFromRedis(STATUS_FORECASTS_HASH_NAME)
     logger.info('Tracked forecasts status in redis:')
     showAsTable(data)
+    #TODO: предлагаю отключиь сохранение в бд промежуточной best_price, чтобы не бомбить зря бд и записывать только при закрытии прогноза
     updateBestPrice(data)
     logger.info('renew Forecasts')
-    renewForecasts()
+    #Это тут для теста? Renew (продление прогноза) включает аналитик из личного кабинета, пока комменчу
+    #renewForecasts()
     logger.info('close Forecasts')
+    #Это в cron на Yii
     closeForecasts()
     cf = getClosedForecasts()
     logger.info('Closed forecasts:')
