@@ -26,6 +26,7 @@ function getHashData(hash_name){
 
 /**
  * Track forecasts prices
+ * Функция для отслеживаемых прогнозов обновляет лучшую цену и сохраняет это всё в Redis
  * @param data array of objects [{symbol: symbol, value: value, timestamp: timestamp, source_id: source_id }, ...]
  */
 function track(data){
@@ -67,6 +68,7 @@ function track(data){
             //update statusForecasts object in memory
             for(var trackedForecastId in trackedForecasts){
                 var symbol = trackedForecasts[trackedForecastId]['code'];
+                //TODO: что за странный код?
                 var symbolIndex = symbolIndex = dataIndex1[symbol] || dataIndex2[symbol] || dataIndex3[symbol];
                 if (symbolIndex == undefined)
                     continue;
@@ -77,7 +79,7 @@ function track(data){
                     var newPrice = data[symbolIndex].value;
                     var oldPrice = statusForecasts[trackedForecastId].price;
                     var forecastPrice =trackedForecasts[trackedForecastId].price;
-                    if (newPriceIsBetter(newPrice, oldPrice, forecastPrice)){
+                    if (isNewPriceBetter(newPrice, oldPrice, forecastPrice)){
                         var payload = {'forecast_id': trackedForecastId, 'price': newPrice, 'timestamp': (new Date(data[symbolIndex].timestamp)).toISOString(), 'source_id': data[symbolIndex].source_id};
                         statusForecasts[trackedForecastId] = JSON.stringify(payload);
                     }else{
@@ -92,14 +94,14 @@ function track(data){
 }
 
 /**
- * New Price Is Better
+ * is new price better?
  * @param newPrice
  * @param oldPrice
  * @param forecastPrice
  * @returns {boolean}
  */
-function newPriceIsBetter(newPrice, oldPrice, forecastPrice){
-    return (Math.abs(forecastPrice - newPrice) < Math.abs(forecastPrice - oldPrice)) && newPrice >= forecastPrice;
+function isNewPriceBetter(newPrice, oldPrice, forecastPrice){
+    return (Math.abs(forecastPrice - newPrice) <= Math.abs(forecastPrice - oldPrice));
 }
 
 /**
