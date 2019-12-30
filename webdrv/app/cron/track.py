@@ -53,12 +53,12 @@ STATUS_FORECASTS_HASH_NAME = 'status_forecasts'
 RAW_DATA_HASH_NAME = 'raw_data'
 
 def markTrackedForecasts():
-    sql = '''UPDATE forecast SET tracked=TRUE WHERE id IN
+    sql = '''UPDATE forecast SET is_tracked=TRUE WHERE id IN
             (SELECT id FROM forecast WHERE (status='active' OR status='renew')
              AND date(current_timestamp) <= date(date_forecast)
             AND date(current_timestamp) >=  date(date_forecast - (date_forecast-created_at)/4))'''
     db_fforecast.execute(sql)
-    sql = '''UPDATE forecast SET tracked=FALSE WHERE id NOT IN
+    sql = '''UPDATE forecast SET is_tracked=FALSE WHERE id NOT IN
             (SELECT id FROM forecast WHERE (status='active' OR status='renew')
              AND date(current_timestamp) <= date(date_forecast)
             AND date(current_timestamp) >=  date(date_forecast - (date_forecast-created_at)/4))'''
@@ -131,17 +131,17 @@ def renewForecasts():
     db_fforecast.execute(sql)
 
 def closeForecasts():
-    sql = '''UPDATE forecast SET status='completed', closed_at=current_timestamp, tracked=FALSE
+    sql = '''UPDATE forecast SET status='completed', closed_at=current_timestamp, is_tracked=FALSE
             WHERE status='renew'
             AND date_forecast < current_timestamp'''
     db_fforecast.execute(sql)
 
-    sql = '''UPDATE forecast SET status='completed', closed_at=current_timestamp, tracked=FALSE
+    sql = '''UPDATE forecast SET status='completed', closed_at=current_timestamp, is_tracked=FALSE
             WHERE status='renew' AND date_forecast > current_timestamp AND best_price NOTNULL
             AND best_price > price_forecast'''
     db_fforecast.execute(sql)
 
-    sql = '''UPDATE forecast SET status='completed', closed_at=current_timestamp, tracked=FALSE
+    sql = '''UPDATE forecast SET status='completed', closed_at=current_timestamp, is_tracked=FALSE
             WHERE status='active' AND date_forecast > current_timestamp AND
             current_timestamp < (date_forecast + (date_forecast-created_at)/4)
             AND best_price NOTNULL AND best_price > price_forecast'''
@@ -256,7 +256,8 @@ if __name__ == '__main__':
         tf = getTrackedForecasts()
         showAsTable(tf)
     elif options.track:
-        track()
+        pprint('This option was disabled')
+        #track()
     elif options.failover:
         failover()
     else:

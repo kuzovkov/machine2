@@ -34,6 +34,7 @@ function track(data){
     var dataIndex3 = {};
     var trackedForecasts = {};
     var statusForecasts = {};
+    var source_id = null;
     for(var i = 0; i < data.length; i++){
         var symbol = data[i].symbol;
         dataIndex1[symbol] = i;
@@ -42,6 +43,12 @@ function track(data){
         alias = [symbol.substring(0, 3), symbol.substring(3)].join('/');
         dataIndex3[alias] = i;
     }
+    status_forecasts_hash_name = STATUS_FORECASTS_HASH_NAME;
+    if (data.length > 0){
+        source_id = data[0].source_id;
+        status_forecasts_hash_name = [STATUS_FORECASTS_HASH_NAME, source_id].join('_');
+    }
+
     
     getHashData(TRACKED_FORECASTS_HASH_NAME)
         .then(function (forecasts) {
@@ -50,7 +57,7 @@ function track(data){
                     trackedForecasts[forecastId] = JSON.parse(forecasts[forecastId]);
                 }
             }
-            return getHashData(STATUS_FORECASTS_HASH_NAME);
+            return getHashData(status_forecasts_hash_name);
         })
         .then(function (forecasts) {
             if (forecasts){
@@ -67,7 +74,7 @@ function track(data){
             //update statusForecasts object in memory
             for(var trackedForecastId in trackedForecasts){
                 var symbol = trackedForecasts[trackedForecastId]['code'];
-                var symbolIndex = symbolIndex = dataIndex1[symbol] || dataIndex2[symbol] || dataIndex3[symbol];
+                var symbolIndex = dataIndex1[symbol] || dataIndex2[symbol] || dataIndex3[symbol];
                 if (symbolIndex == undefined)
                     continue;
                 if (statusForecasts[trackedForecastId] == undefined){
@@ -86,8 +93,10 @@ function track(data){
                 }
             }
             //update STATUS_FORECASTS_HASH in Redis
-            if (Object.keys(statusForecasts).length > 0)
-                rc.hmset(STATUS_FORECASTS_HASH_NAME, statusForecasts);
+            if (Object.keys(statusForecasts).length > 0){
+                rc.hmset(status_forecasts_hash_name, statusForecasts);
+            }
+
         })
 }
 

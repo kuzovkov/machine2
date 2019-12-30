@@ -1,2 +1,4 @@
 .idea
 data/*
+webdrv/app/cron/conf.py
+*.pyc
